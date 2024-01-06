@@ -1,0 +1,107 @@
+import pygame
+import random
+import time
+pygame.font.init()
+pygame.init()
+SCREEN_HEIGHT = 600
+SCREEN_WEIDTH = 1000
+# the pictures
+pc = pygame.transform.scale(pygame.image.load("pictures/spacee.jpg"),(SCREEN_WEIDTH, SCREEN_HEIGHT))
+
+# screen
+screen = pygame.display.set_mode((SCREEN_WEIDTH, SCREEN_HEIGHT))
+
+# player Properties
+PLAYER_WIDTH = 40
+PLAYER_HEIGHT = 60
+PLAYER_VELOCITY = 3
+
+# name of the game
+pygame.display.set_caption("space dawg")
+
+# properties for the game
+STAR_WIDTH = 10
+STAR_HEIGHT = 20
+STAR_VELOCITY = 5
+FONT = pygame.font.SysFont("comicsans", 30)
+
+# updater for picture
+def draw(player, elapsed_time, stars):
+    screen.blit(pc, (0, 0))
+    time_text = FONT.render(f"round {round(elapsed_time)}s", 1,"white")
+    screen.blit(time_text, (10, 10))
+    pygame.draw.rect(screen, "grey", player)
+    for star in stars:
+        pygame.draw.rect(screen, "red", star)
+
+    pygame.display.update()
+
+
+
+# main game
+def main():
+    hit = False
+    clock = pygame.time.Clock()
+    # the timer for the game
+    startup_time = time.time()
+    elapsed_time = 0
+    
+    # the player
+    player = pygame.Rect(450, SCREEN_HEIGHT - PLAYER_HEIGHT, PLAYER_WIDTH, PLAYER_HEIGHT)
+    # the program life support
+    run = True
+
+    # the projectiles
+    star_add_incremental = 2000
+    star_count = 0
+    stars = []
+    while run:
+        # fps cap
+        star_count += clock.tick(60)
+        # the actual timer
+        elapsed_time = time.time() - startup_time
+
+        if star_count > star_add_incremental:
+            for i in range(15):
+                star_x =  random.randint(0, SCREEN_WEIDTH - STAR_WIDTH)
+                star = pygame.Rect(star_x, -STAR_HEIGHT, STAR_WIDTH, STAR_HEIGHT)
+                stars.append(star)
+
+            star_count = 0
+            star_add_incremental = max(200, star_add_incremental - 50)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+                break
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_q] == True and player.x - PLAYER_VELOCITY >= 0:
+            player.x -= PLAYER_VELOCITY
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_d] == True and player.x + PLAYER_VELOCITY + PLAYER_WIDTH <= SCREEN_WEIDTH:
+            player.x += PLAYER_VELOCITY
+        
+        for star in stars[:]:
+            star.y += STAR_VELOCITY
+            if star.y > SCREEN_HEIGHT:
+                stars.remove(star)
+            elif star.y + STAR_HEIGHT >= player.y and star.colliderect(player):
+                stars.remove(star)
+                hit = True
+                break
+        if hit:
+            you_lost = FONT.render("You Lost", 1, "red")
+            screen.blit(you_lost,(SCREEN_WEIDTH/2 - you_lost.get_width()/2, SCREEN_HEIGHT/2 - you_lost.get_height()/2))
+            pygame.display.update()
+            pygame.time.delay(4000)
+            break
+
+        
+        
+
+        draw(player, elapsed_time, stars)
+
+
+    pygame.quit()
+
+if __name__ == "__main__":
+    main()
